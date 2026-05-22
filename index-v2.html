@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>名刺 v2</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    /* ── tab switcher ── */
+    .tabs {
+      display: flex;
+      gap: 16px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 1px solid transparent;
+      padding: 6px 2px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: #aaa;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      font-family: inherit;
+      text-transform: uppercase;
+    }
+    .tab-btn.active {
+      color: #000;
+      border-bottom-color: #000;
+    }
+    .tab-btn:hover { color: #000; }
+
+    /* ── card + arrows row ── */
+    .card-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* ── nav buttons ── */
+    .nav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-size: 22px;
+      font-weight: 300;
+      color: #000;
+      line-height: 1;
+      transition: opacity 0.12s;
+      font-family: inherit;
+      user-select: none;
+      width: 22px;
+      text-align: center;
+    }
+    .nav-btn:hover { opacity: 0.35; }
+    .nav-btn:disabled { opacity: 0.12; cursor: default; pointer-events: none; }
+
+    /* ── card scene ── */
+    .scene {
+      width: 114.7mm;
+      height: 69.3mm;
+      perspective: 756mm;
+      flex-shrink: 0;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.4, 0.15, 0.2, 1);
+      cursor: pointer;
+    }
+    .card-inner.flipped { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow: none;
+      border: 1px solid #000;
+    }
+    .card-face img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .card-back { transform: rotateY(180deg); }
+
+    /* ── bottom info ── */
+    .card-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-name {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: #000;
+    }
+    .counter {
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tab selector -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabLine" onclick="switchTab('line')">Line Ver</button>
+    <button class="tab-btn" id="tabText" onclick="switchTab('text')">Text Ver</button>
+  </div>
+
+  <!-- Card + arrows -->
+  <div class="card-row">
+    <button class="nav-btn" id="prevBtn" disabled>&lt;</button>
+
+    <div class="scene">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face card-front">
+          <img id="frontImg" src="" alt="">
+        </div>
+        <div class="card-face card-back">
+          <img src="file:///Users/daeunyang/Downloads/Namecard-04%202.png" alt="">
+        </div>
+      </div>
+    </div>
+
+    <button class="nav-btn" id="nextBtn">&gt;</button>
+  </div>
+
+  <!-- Name + counter -->
+  <div class="card-info">
+    <span class="card-name" id="cardName">line_1</span>
+    <span class="counter" id="counter">1/9</span>
+  </div>
+
+  <script>
+    const BASE = 'file:///Users/daeunyang/Downloads/namecard_design/';
+
+    const sets = {
+      line: [
+        'line_1', 'line_2', 'line_3', 'line_4', 'line_5',
+        'line_6', 'line_7', 'line_8', 'line_9',
+      ],
+      text: [
+        'text_1', 'text_2', 'text_3', 'text_4', 'text_5',
+        'text_6', 'text_7',
+      ],
+    };
+
+    let currentTab = 'line';
+    let current = 0;
+    let isFlipped = false;
+
+    const frontImg  = document.getElementById('frontImg');
+    const cardInner = document.getElementById('cardInner');
+    const cardName  = document.getElementById('cardName');
+    const counter   = document.getElementById('counter');
+    const prevBtn   = document.getElementById('prevBtn');
+    const nextBtn   = document.getElementById('nextBtn');
+
+    function setCard(index) {
+      current = index;
+      const list = sets[currentTab];
+      const name = list[current];
+      frontImg.src = BASE + name + '.png';
+      cardName.textContent = name;
+      counter.textContent = (current + 1) + '/' + list.length;
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === list.length - 1;
+    }
+
+    function navigate(index) {
+      if (isFlipped) {
+        cardInner.classList.remove('flipped');
+        isFlipped = false;
+        setTimeout(() => setCard(index), 380);
+      } else {
+        setCard(index);
+      }
+    }
+
+    function switchTab(tab) {
+      if (tab === currentTab) return;
+      currentTab = tab;
+      document.getElementById('tabLine').classList.toggle('active', tab === 'line');
+      document.getElementById('tabText').classList.toggle('active', tab === 'text');
+      if (isFlipped) {
+        cardInner.classList.remove('flipped');
+        isFlipped = false;
+      }
+      setCard(0);
+    }
+
+    cardInner.addEventListener('click', () => {
+      isFlipped = !isFlipped;
+      cardInner.classList.toggle('flipped', isFlipped);
+    });
+
+    prevBtn.addEventListener('click', () => { if (current > 0) navigate(current - 1); });
+    nextBtn.addEventListener('click', () => {
+      if (current < sets[currentTab].length - 1) navigate(current + 1);
+    });
+
+    document.addEventListener('keydown', e => {
+      const list = sets[currentTab];
+      if      (e.key === 'ArrowRight') { e.preventDefault(); if (current < list.length - 1) navigate(current + 1); }
+      else if (e.key === 'ArrowLeft')  { e.preventDefault(); if (current > 0) navigate(current - 1); }
+      else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        isFlipped = !isFlipped;
+        cardInner.classList.toggle('flipped', isFlipped);
+      }
+    });
+
+    setCard(0);
+  </script>
+</body>
+</html>
