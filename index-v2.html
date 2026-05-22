@@ -93,9 +93,17 @@
       -webkit-backface-visibility: hidden;
       border-radius: 2px;
       overflow: hidden;
-      box-shadow: none;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      /* default: stroke on */
       border: 1px solid #000;
+      box-shadow: none;
     }
+    /* shadow mode */
+    .card-face.shadow-mode {
+      border: 1px solid transparent;
+      box-shadow: 7px 7px 10px rgba(0,0,0,0.25);
+    }
+
     .card-face img {
       display: block;
       width: 100%;
@@ -121,6 +129,42 @@
       letter-spacing: 0.06em;
       color: #aaa;
     }
+
+    /* ── stroke toggle ── */
+    .stroke-toggle {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .stroke-toggle input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border: 1px solid #000;
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .stroke-toggle input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 8px;
+      height: 8px;
+      background: #000;
+      border-radius: 1px;
+    }
+    .stroke-toggle span {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: #000;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
@@ -137,10 +181,10 @@
 
     <div class="scene">
       <div class="card-inner" id="cardInner">
-        <div class="card-face card-front">
+        <div class="card-face card-front" id="faceFront">
           <img id="frontImg" src="" alt="">
         </div>
-        <div class="card-face card-back">
+        <div class="card-face card-back" id="faceBack">
           <img src="images/Namecard-04 2.png" alt="">
         </div>
       </div>
@@ -154,6 +198,12 @@
     <span class="card-name" id="cardName">line_1</span>
     <span class="counter" id="counter">1/9</span>
   </div>
+
+  <!-- Stroke toggle -->
+  <label class="stroke-toggle">
+    <input type="checkbox" id="strokeCheck" checked>
+    <span>Stroke</span>
+  </label>
 
   <script>
     const BASE = 'images/namecard_design/';
@@ -175,10 +225,20 @@
 
     const frontImg  = document.getElementById('frontImg');
     const cardInner = document.getElementById('cardInner');
+    const faceFront = document.getElementById('faceFront');
+    const faceBack  = document.getElementById('faceBack');
     const cardName  = document.getElementById('cardName');
     const counter   = document.getElementById('counter');
     const prevBtn   = document.getElementById('prevBtn');
     const nextBtn   = document.getElementById('nextBtn');
+    const strokeCheck = document.getElementById('strokeCheck');
+
+    function applyStyle() {
+      const shadow = !strokeCheck.checked;
+      [faceFront, faceBack].forEach(f => f.classList.toggle('shadow-mode', shadow));
+    }
+
+    strokeCheck.addEventListener('change', applyStyle);
 
     function setCard(index) {
       current = index;
@@ -235,6 +295,7 @@
     });
 
     setCard(0);
+    applyStyle();
   </script>
 </body>
 </html>
